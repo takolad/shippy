@@ -273,14 +273,29 @@ class FedEx extends AbstractCarrier
 
         foreach (Arr::get($data, 'output.completeTrackResults', []) as $result) {
             $statusCode = Arr::get($result, 'trackResults.0.latestStatusDetail.code', '');
+            $statusDetail = Arr::get($result, 'trackResults.0.latestStatusDetail.description', '');
             $status = $this->_mapTrackingStatus($statusCode);
+
+            // Extract estimated delivery date from dateAndTimes array
+            $estimatedDelivery = null;
+            $dateAndTimes = Arr::get($result, 'trackResults.0.dateAndTimes', []);
+            foreach ($dateAndTimes as $dateTime) {
+                if (Arr::get($dateTime, 'type') === 'ESTIMATED_DELIVERY') {
+                    $estimatedDelivery = Arr::get($dateTime, 'dateTime');
+                    break;
+                }
+            }
+
+            $signedBy = Arr::get($result, 'trackResults.0.deliveryDetails.receivedByName', null);
 
             $tracking[] = new Tracking([
                 'carrier' => $this,
                 'response' => $result,
                 'trackingNumber' => Arr::get($result, 'trackingNumber', ''),
                 'status' => $status,
-                'estimatedDelivery' => null,
+                'statusDetail' => $statusDetail,
+                'estimatedDelivery' => $estimatedDelivery,
+                'signedBy' => $signedBy,
                 'details' => array_map(function($detail) {
                     $location = array_filter([
                         Arr::get($detail, 'scanLocation.city', ''),
@@ -588,7 +603,7 @@ class FedEx extends AbstractCarrier
     {
         return match ($status) {
             'AP' => Tracking::STATUS_AVAILABLE_FOR_PICKUP,
-            'IT', 'IX' => Tracking::STATUS_IN_TRANSIT,
+            'AR', 'IT', 'IX' => Tracking::STATUS_IN_TRANSIT,
             'OD' => Tracking::STATUS_OUT_FOR_DELIVERY,
             'DL' => Tracking::STATUS_DELIVERED,
             'RS' => Tracking::STATUS_RETURN_TO_SENDER,
