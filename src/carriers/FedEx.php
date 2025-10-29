@@ -286,6 +286,8 @@ class FedEx extends AbstractCarrier
                 }
             }
 
+            $signedBy = Arr::get($result, 'trackResults.0.deliveryDetails.receivedByName', null);
+
             $tracking[] = new Tracking([
                 'carrier' => $this,
                 'response' => $result,
@@ -293,6 +295,7 @@ class FedEx extends AbstractCarrier
                 'status' => $status,
                 'statusDetail' => $statusDetail,
                 'estimatedDelivery' => $estimatedDelivery,
+                'signedBy' => $signedBy,
                 'details' => array_map(function($detail) {
                     $location = array_filter([
                         Arr::get($detail, 'scanLocation.city', ''),
