@@ -273,6 +273,7 @@ class FedEx extends AbstractCarrier
 
         foreach (Arr::get($data, 'output.completeTrackResults', []) as $result) {
             $statusCode = Arr::get($result, 'trackResults.0.latestStatusDetail.code', '');
+            $statusDetail = Arr::get($result, 'trackResults.0.latestStatusDetail.description', '');
             $status = $this->_mapTrackingStatus($statusCode);
 
             // Extract estimated delivery date from dateAndTimes array
@@ -290,6 +291,7 @@ class FedEx extends AbstractCarrier
                 'response' => $result,
                 'trackingNumber' => Arr::get($result, 'trackingNumber', ''),
                 'status' => $status,
+                'statusDetail' => $statusDetail,
                 'estimatedDelivery' => $estimatedDelivery,
                 'details' => array_map(function($detail) {
                     $location = array_filter([
