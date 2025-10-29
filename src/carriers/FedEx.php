@@ -598,7 +598,7 @@ class FedEx extends AbstractCarrier
     {
         return match ($status) {
             'AP' => Tracking::STATUS_AVAILABLE_FOR_PICKUP,
-            'IT', 'IX' => Tracking::STATUS_IN_TRANSIT,
+            'AR', 'IT', 'IX' => Tracking::STATUS_IN_TRANSIT,
             'OD' => Tracking::STATUS_OUT_FOR_DELIVERY,
             'DL' => Tracking::STATUS_DELIVERED,
             'RS' => Tracking::STATUS_RETURN_TO_SENDER,
