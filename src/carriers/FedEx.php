@@ -42,7 +42,7 @@ class FedEx extends AbstractCarrier
     {
         return $shipment->getTo()->getCountryCode() === $shipment->getFrom()->getCountryCode();
     }
-    
+
     public static function getTrackingUrl(string $trackingNumber): ?string
     {
         return "https://www.fedex.com/fedextrack/?trknbr={$trackingNumber}";
@@ -273,8 +273,6 @@ class FedEx extends AbstractCarrier
 
         foreach (Arr::get($data, 'output.completeTrackResults', []) as $result) {
             $statusCode = Arr::get($result, 'trackResults.0.latestStatusDetail.code', '');
-            $statusDetail = Arr::get($result, 'trackResults.0.latestStatusDetail.description', '');
-            $status = $this->_mapTrackingStatus($statusCode);
 
             // Extract estimated delivery date from dateAndTimes array
             $estimatedDelivery = null;
@@ -286,16 +284,14 @@ class FedEx extends AbstractCarrier
                 }
             }
 
-            $signedBy = Arr::get($result, 'trackResults.0.deliveryDetails.receivedByName', null);
-
             $tracking[] = new Tracking([
                 'carrier' => $this,
                 'response' => $result,
                 'trackingNumber' => Arr::get($result, 'trackingNumber', ''),
-                'status' => $status,
-                'statusDetail' => $statusDetail,
+                'status' => $this->_mapTrackingStatus($statusCode),
+                'statusDetail' => Arr::get($result, 'trackResults.0.latestStatusDetail.description', ''),
                 'estimatedDelivery' => $estimatedDelivery,
-                'signedBy' => $signedBy,
+                'signedBy' => Arr::get($result, 'trackResults.0.deliveryDetails.receivedByName', null),
                 'details' => array_map(function($detail) {
                     $location = array_filter([
                         Arr::get($detail, 'scanLocation.city', ''),
@@ -308,6 +304,8 @@ class FedEx extends AbstractCarrier
                         'location' => implode(' ', $location),
                         'description' => Arr::get($detail, 'eventDescription', ''),
                         'date' => Arr::get($detail, 'date', ''),
+                        'status' => $this->_mapTrackingStatus(Arr::get($detail, 'eventType', '')),
+                        'statusDetail' => Arr::get($detail, 'eventDescription', ''),
                     ]);
                 }, Arr::get($result, 'trackResults.0.scanEvents', [])),
             ]);
