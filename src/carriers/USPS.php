@@ -332,7 +332,7 @@ class USPS extends AbstractCarrier
                 'response' => $data,
                 'trackingNumber' => $trackingNumber,
                 'status' => $status,
-                'estimatedDelivery' => null,
+                'estimatedDelivery' => Arr::get($data, 'predictedDeliveryDate'),
                 'details' => array_map(function($detail) {
                     $location = array_filter([
                         Arr::get($detail, 'eventCity', ''),
